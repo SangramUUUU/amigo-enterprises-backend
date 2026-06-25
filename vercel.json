@@ -3,13 +3,20 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/((?!health).*)",
+      "destination": "/api"
+    },
+    {
+      "source": "/((?!api).*)",
       "destination": "/api"
     }
   ],
   "functions": {
     "api/index.js": {
       "maxDuration": 60
+    },
+    "api/health.js": {
+      "maxDuration": 10
     }
   },
   "crons": [

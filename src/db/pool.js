@@ -26,12 +26,14 @@ function createPoolConfig(connectionString = databaseUrl) {
   return config;
 }
 
+const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
 const pool = new Pool({
   ...createPoolConfig(),
-  max: 10,
-  min: 2,
-  idleTimeoutMillis: 30_000,
-  connectionTimeoutMillis: 10_000,
+  max: isServerless ? 3 : 10,
+  min: isServerless ? 0 : 2,
+  idleTimeoutMillis: isServerless ? 10_000 : 30_000,
+  connectionTimeoutMillis: isServerless ? 5_000 : 10_000,
 });
 
 module.exports = pool;
