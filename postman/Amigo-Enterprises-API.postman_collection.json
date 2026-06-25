@@ -60,6 +60,14 @@
       "name": "Health & Cron",
       "item": [
         {
+          "name": "DB Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/db-health"
+          }
+        },
+        {
           "name": "Health Check",
           "request": {
             "method": "GET",

@@ -55,6 +55,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/db-health', async (req, res, next) => {
+  try {
+    const pool = require('./db/pool');
+    const { rows } = await pool.query('SELECT 1 AS ok, NOW() AS server_time');
+    res.json({ ok: true, db: rows[0], timestamp: new Date().toISOString() });
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use(createSessionMiddleware());
 
 app.get('/api/cron/daily', async (req, res, next) => {

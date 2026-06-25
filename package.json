@@ -22,7 +22,6 @@
     "nodemailer": "^6.9.16",
     "pdfkit": "^0.16.0",
     "pg": "^8.13.1",
-    "serverless-http": "^3.2.0",
     "uuid": "^11.0.5"
   },
   "devDependencies": {
