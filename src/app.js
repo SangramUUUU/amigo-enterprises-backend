@@ -39,9 +39,23 @@ function resolveAllowedOrigins() {
 
 const allowedOrigins = resolveAllowedOrigins();
 
+function isAllowedOrigin(origin) {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  try {
+    const { hostname } = new URL(origin);
+    if (hostname === 'vercel.app' || hostname.endsWith('.vercel.app')) {
+      return true;
+    }
+  } catch {
+    // ignore malformed origin
+  }
+  return false;
+}
+
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (isAllowedOrigin(origin)) {
       callback(null, true);
       return;
     }

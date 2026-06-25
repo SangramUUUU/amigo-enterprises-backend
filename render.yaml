@@ -15,3 +15,4 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         sync: false
+        # e.g. https://amigo-enterprises-frontend.vercel.app (comma-separate preview URLs if needed)
