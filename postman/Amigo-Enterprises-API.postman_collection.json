@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
     "name": "Amigo Enterprises API",
-    "description": "ESP Servicing & Invoicing ERP — full backend API collection.\n\n## Setup\n1. Import this collection and the environment file.\n2. Select **Local** or **Vercel** environment.\n3. Run **Auth → Login** first (session cookie is stored automatically).\n4. Use other requests — IDs are auto-saved from list/create responses where possible.\n\n## Auth\nSession-based (`connect.sid` cookie). Postman stores cookies after Login.\n\n## OTP flows\nFor **Create User** and **Finalize Invoice** when SMTP OTP is enabled:\n1. Verification → OTP Status\n2. Verification → Request OTP\n3. Verification → Verify OTP\n4. Call create/finalize with `verificationId` in body.",
+    "description": "ESP Servicing & Invoicing ERP — full backend API collection.\n\n## Setup\n1. Import this collection and an environment file (Local, Render, or Vercel).\n2. Set `baseUrl`, `email`, `password`, and `cronSecret` to match your deployment.\n   - `email` / `password` must match the super-admin from `npm run seed` (SEED_SUPERADMIN_* env vars).\n   - `cronSecret` must match the `CRON_SECRET` env var on the server.\n3. Select your environment (e.g. **Render** for `https://YOUR-SERVICE.onrender.com`).\n4. Run **Auth → Login** first (session cookie is stored automatically).\n5. Use other requests — IDs are auto-saved from list/create responses where possible.\n\n## Auth\nSession-based (`connect.sid` cookie). Postman stores cookies after Login. Enable cookies in Postman settings for HTTPS (Render/Vercel).\n\n## RBAC (roles)\n- **super_admin / admin:** Users, Verification, Invoice finalize/cancel/payments/delete, AMC create/update/delete, Org Settings PUT.\n- **employee:** Read-mostly access; admin-only routes return 403.\n\n## OTP flows\nFor **Create User** and **Finalize Invoice** when SMTP OTP is enabled:\n1. Verification → OTP Status\n2. Verification → Request OTP\n3. Verification → Verify OTP\n4. Call create/finalize with `verificationId` in body.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -52,7 +52,7 @@
     },
     {
       "key": "cronSecret",
-      "value": "your-cron-secret"
+      "value": "replace-with-your-cron-secret"
     }
   ],
   "item": [
@@ -87,7 +87,7 @@
               }
             ],
             "url": "{{baseUrl}}/api/cron/daily",
-            "description": "Runs overdue invoice check + AMC reminders. Requires CRON_SECRET."
+            "description": "Runs overdue invoice check + AMC reminders. `cronSecret` must match server CRON_SECRET env var."
           }
         }
       ]
@@ -275,7 +275,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/products?q=&product_type="
+            "url": "{{baseUrl}}/api/products?q=&product_type=&includeInactive=true"
           }
         },
         {
@@ -370,6 +370,7 @@
     },
     {
       "name": "Invoices",
+      "description": "PATCH, Finalize, Cancel, Add Payment, and Delete require **admin** or **super_admin** role.",
       "item": [
         {
           "name": "List Invoices",
@@ -392,7 +393,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/invoices?status=&q="
+            "url": "{{baseUrl}}/api/invoices?status=&customer_id=&q="
           }
         },
         {
@@ -463,7 +464,8 @@
               "mode": "raw",
               "raw": "{\n  \"notes\": \"Updated via Postman\"\n}"
             },
-            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}"
+            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}",
+            "description": "Admin only."
           }
         },
         {
@@ -481,7 +483,7 @@
               "raw": "{\n  \"verificationId\": \"{{verificationId}}\"\n}"
             },
             "url": "{{baseUrl}}/api/invoices/{{invoiceId}}/finalize",
-            "description": "Requires OTP verificationId when SMTP OTP is enabled. Leave verificationId empty if OTP disabled."
+            "description": "Admin only. Requires OTP verificationId when SMTP OTP is enabled. Leave verificationId empty if OTP disabled."
           }
         },
         {
@@ -489,7 +491,8 @@
           "request": {
             "method": "POST",
             "header": [],
-            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}/cancel"
+            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}/cancel",
+            "description": "Admin only."
           }
         },
         {
@@ -506,7 +509,8 @@
               "mode": "raw",
               "raw": "{\n  \"amount\": 1000,\n  \"payment_mode\": \"bank_transfer\",\n  \"reference_no\": \"UTR123456\"\n}"
             },
-            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}/payments"
+            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}/payments",
+            "description": "Admin only."
           }
         },
         {
@@ -514,7 +518,8 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}"
+            "url": "{{baseUrl}}/api/invoices/{{invoiceId}}",
+            "description": "Admin only. Draft invoices only."
           }
         },
         {
@@ -545,6 +550,7 @@
     },
     {
       "name": "AMC Contracts",
+      "description": "Create, Update, and Delete require **admin** or **super_admin** role.",
       "item": [
         {
           "name": "List AMC Contracts",
@@ -567,7 +573,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/amc-contracts"
+            "url": "{{baseUrl}}/api/amc-contracts?q=&customer_id=&includeInactive=true"
           }
         },
         {
@@ -603,9 +609,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"start_date\": \"2026-01-01\",\n  \"end_date\": \"2026-12-31\",\n  \"visit_frequency\": \"quarterly\",\n  \"annual_amount\": 120000,\n  \"notes\": \"Annual AMC\"\n}"
+              "raw": "{\n  \"customer_id\": \"{{customerId}}\",\n  \"start_date\": \"2026-01-01\",\n  \"end_date\": \"2026-12-31\",\n  \"visit_frequency\": \"quarterly\",\n  \"contract_value\": 120000,\n  \"notes\": \"Annual AMC\"\n}"
             },
-            "url": "{{baseUrl}}/api/amc-contracts"
+            "url": "{{baseUrl}}/api/amc-contracts",
+            "description": "Admin only."
           }
         },
         {
@@ -622,7 +629,8 @@
               "mode": "raw",
               "raw": "{\n  \"notes\": \"Updated AMC terms\"\n}"
             },
-            "url": "{{baseUrl}}/api/amc-contracts/{{contractId}}"
+            "url": "{{baseUrl}}/api/amc-contracts/{{contractId}}",
+            "description": "Admin only."
           }
         },
         {
@@ -630,7 +638,8 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": "{{baseUrl}}/api/amc-contracts/{{contractId}}"
+            "url": "{{baseUrl}}/api/amc-contracts/{{contractId}}",
+            "description": "Admin only."
           }
         }
       ]
@@ -659,7 +668,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/service-jobs"
+            "url": "{{baseUrl}}/api/service-jobs?status=&customer_id=&assigned_to=&q="
           }
         },
         {
@@ -729,9 +738,10 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"completion_notes\": \"Job completed successfully\"\n}"
+              "raw": "{\n  \"completed_date\": \"2026-06-25\"\n}"
             },
-            "url": "{{baseUrl}}/api/service-jobs/{{jobId}}/complete"
+            "url": "{{baseUrl}}/api/service-jobs/{{jobId}}/complete",
+            "description": "Optional ISO date (YYYY-MM-DD). Defaults to today if omitted."
           }
         },
         {
@@ -746,6 +756,7 @@
     },
     {
       "name": "Users",
+      "description": "All endpoints require **admin** or **super_admin** role.",
       "item": [
         {
           "name": "List Users",
@@ -861,7 +872,8 @@
               "mode": "raw",
               "raw": "{\n  \"company_name\": \"Amigo Enterprises\",\n  \"smtp_enabled\": true,\n  \"smtp_email\": \"your@gmail.com\",\n  \"smtp_app_password\": \"your-app-password\",\n  \"smtp_host\": \"smtp.gmail.com\",\n  \"smtp_port\": 587\n}"
             },
-            "url": "{{baseUrl}}/api/org-settings"
+            "url": "{{baseUrl}}/api/org-settings",
+            "description": "Admin only."
           }
         }
       ]
@@ -890,7 +902,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/notifications"
+            "url": "{{baseUrl}}/api/notifications?type=&unread_only=true"
           }
         },
         {
@@ -913,6 +925,7 @@
     },
     {
       "name": "Verification (OTP)",
+      "description": "All endpoints require **admin** or **super_admin** role.",
       "item": [
         {
           "name": "OTP Status",

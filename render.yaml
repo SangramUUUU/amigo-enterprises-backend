@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: amigo-enterprises-backend
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    preDeployCommand: npm run migrate
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CRON_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
