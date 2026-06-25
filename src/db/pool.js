@@ -1,5 +1,11 @@
+const dns = require('node:dns');
 const { Pool } = require('pg');
 const { databaseUrl } = require('../config/env');
+
+// Vercel/serverless: prefer IPv4 when resolving Supabase hostnames (avoids 60s hangs).
+if (process.env.VERCEL) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 function isSupabaseUrl(url) {
   return /supabase\.com/i.test(url);
@@ -7,7 +13,6 @@ function isSupabaseUrl(url) {
 
 function normalizeConnectionString(connectionString) {
   if (!connectionString) return connectionString;
-  // pg v8+ treats sslmode=require as strict verification; Supabase pooler needs relaxed TLS.
   if (!isSupabaseUrl(connectionString)) return connectionString;
   return connectionString
     .replace(/[?&]sslmode=[^&]*/gi, '')
@@ -30,10 +35,15 @@ const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTI
 
 const pool = new Pool({
   ...createPoolConfig(),
-  max: isServerless ? 3 : 10,
-  min: isServerless ? 0 : 2,
-  idleTimeoutMillis: isServerless ? 10_000 : 30_000,
-  connectionTimeoutMillis: isServerless ? 5_000 : 10_000,
+  max: isServerless ? 1 : 10,
+  min: 0,
+  idleTimeoutMillis: isServerless ? 5_000 : 30_000,
+  connectionTimeoutMillis: isServerless ? 8_000 : 10_000,
+  allowExitOnIdle: isServerless,
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected idle pool error:', err.message);
 });
 
 module.exports = pool;

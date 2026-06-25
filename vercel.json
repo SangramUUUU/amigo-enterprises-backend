@@ -3,7 +3,7 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/((?!health).*)",
+      "source": "/api/((?!health$|db-health$).*)",
       "destination": "/api"
     },
     {
@@ -17,6 +17,9 @@
     },
     "api/health.js": {
       "maxDuration": 10
+    },
+    "api/db-health.js": {
+      "maxDuration": 15
     }
   },
   "crons": [

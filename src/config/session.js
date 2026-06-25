@@ -4,6 +4,7 @@ const pool = require('../db/pool');
 const { sessionSecret, sessionMaxAgeMs, nodeEnv } = require('./env');
 
 const PgSession = connectPgSimple(session);
+const isServerless = Boolean(process.env.VERCEL);
 
 function createSessionMiddleware() {
   const crossOriginFrontend = Boolean(
@@ -16,7 +17,8 @@ function createSessionMiddleware() {
     store: new PgSession({
       pool,
       tableName: 'session',
-      createTableIfMissing: true,
+      createTableIfMissing: !isServerless,
+      pruneSessionInterval: isServerless ? false : undefined,
     }),
     secret: sessionSecret,
     resave: false,
