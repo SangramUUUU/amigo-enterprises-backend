@@ -3,7 +3,7 @@ services:
     name: amigo-enterprises-backend
     runtime: node
     buildCommand: npm install
-    startCommand: npm start
+    startCommand: node src/server.js
     preDeployCommand: npm run migrate
     healthCheckPath: /api/health
     envVars:
