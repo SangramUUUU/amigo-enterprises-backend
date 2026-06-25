@@ -1,10 +1,8 @@
 services:
   - type: web
     name: amigo-enterprises-backend
-    runtime: node
-    buildCommand: npm install
-    startCommand: node src/server.js
-    preDeployCommand: npm run migrate
+    runtime: docker
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
